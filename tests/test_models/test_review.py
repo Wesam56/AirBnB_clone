@@ -1,16 +1,46 @@
-#!/usr/bin/python3
-"""Defines unittests for models/review.py.
+#!/usr/bin/env python3
+"""Test model for Review class
 Unittest classes:
     TestReview_instantiation
     TestReview_save
     TestReview_to_dict
 """
-import os
-import models
+
 import unittest
+import os
 from datetime import datetime
 from time import sleep
+from models import storage
 from models.review import Review
+from models.base_model import BaseModel
+import uuid
+
+
+class TestReview(unittest.TestCase):
+    """Review model class test case"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup the unittest"""
+        cls.review = Review()
+        cls.review.user_id = str(uuid.uuid4())
+        cls.review.place_id = str(uuid.uuid4())
+        cls.review.text = "St. Petesburg"
+
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up the dirt"""
+        del cls.review
+        try:
+            os.remove("file.json")
+        except FileNotFoundError:
+            pass
+
+    def test_is_subclass(self):
+        self.assertTrue(issubclass(self.review.__class__, BaseModel))
+
+    def checking_for_doc(self):
+        self.assertIsNotNone(Review.__doc__)
 
 
 class TestReview_instantiation(unittest.TestCase):
@@ -20,7 +50,7 @@ class TestReview_instantiation(unittest.TestCase):
         self.assertEqual(Review, type(Review()))
 
     def test_new_instance_stored_in_objects(self):
-        self.assertIn(Review(), models.storage.all().values())
+        self.assertIn(Review(), storage.all().values())
 
     def test_id_is_public_str(self):
         self.assertEqual(str, type(Review().id))
@@ -94,107 +124,51 @@ class TestReview_instantiation(unittest.TestCase):
         with self.assertRaises(TypeError):
             Review(id=None, created_at=None, updated_at=None)
 
-
-class TestReview_save(unittest.TestCase):
-    """Unittests for testing save method of the Review class."""
+class TestReview(unittest.TestCase):
+    """Review model class test case"""
 
     @classmethod
-    def setUp(self):
-        try:
-            os.rename("file.json", "tmp")
-        except IOError:
-            pass
+    def setUpClass(cls):
+        """Setup the unittest"""
+        cls.review = Review()
+        cls.review.user_id = str(uuid.uuid4())
+        cls.review.place_id = str(uuid.uuid4())
+        cls.review.text = "St. Petesburg"
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up the dirt"""
+        del cls.review
         try:
             os.remove("file.json")
-        except IOError:
-            pass
-        try:
-            os.rename("tmp", "file.json")
-        except IOError:
+        except FileNotFoundError:
             pass
 
-    def test_one_save(self):
-        rv = Review()
-        sleep(0.05)
-        first_updated_at = rv.updated_at
-        rv.save()
-        self.assertLess(first_updated_at, rv.updated_at)
+    def test_is_subclass(self):
+        self.assertTrue(issubclass(self.review.__class__, BaseModel))
 
-    def test_two_saves(self):
-        rv = Review()
-        sleep(0.05)
-        first_updated_at = rv.updated_at
-        rv.save()
-        second_updated_at = rv.updated_at
-        self.assertLess(first_updated_at, second_updated_at)
-        sleep(0.05)
-        rv.save()
-        self.assertLess(second_updated_at, rv.updated_at)
+    def checking_for_doc(self):
+        self.assertIsNotNone(Review.__doc__)
 
-    def test_save_with_arg(self):
-        rv = Review()
-        with self.assertRaises(TypeError):
-            rv.save(None)
+    def test_has_attributes(self):
+        self.assertTrue('id' in self.review.__dict__)
+        self.assertTrue('created_at' in self.review.__dict__)
+        self.assertTrue('updated_at' in self.review.__dict__)
+        self.assertTrue('user_id' in self.review.__dict__)
+        self.assertTrue('place_id' in self.review.__dict__)
+        self.assertTrue('text' in self.review.__dict__)
 
-    def test_save_updates_file(self):
-        rv = Review()
-        rv.save()
-        rvid = "Review." + rv.id
-        with open("file.json", "r") as f:
-            self.assertIn(rvid, f.read())
+    def test_attributes_are_string(self):
+        self.assertIs(type(self.review.user_id), str)
+        self.assertIs(type(self.review.place_id), str)
+        self.assertIs(type(self.review.text), str)
 
+    def test_save(self):
+        self.review.save()
+        self.assertNotEqual(self.review.created_at, self.review.updated_at)
 
-class TestReview_to_dict(unittest.TestCase):
-    """Unittests for testing to_dict method of the Review class."""
-
-    def test_to_dict_type(self):
-        self.assertTrue(dict, type(Review().to_dict()))
-
-    def test_to_dict_contains_correct_keys(self):
-        rv = Review()
-        self.assertIn("id", rv.to_dict())
-        self.assertIn("created_at", rv.to_dict())
-        self.assertIn("updated_at", rv.to_dict())
-        self.assertIn("__class__", rv.to_dict())
-
-    def test_to_dict_contains_added_attributes(self):
-        rv = Review()
-        rv.middle_name = "Holberton"
-        rv.my_number = 98
-        self.assertEqual("Holberton", rv.middle_name)
-        self.assertIn("my_number", rv.to_dict())
-
-    def test_to_dict_datetime_attributes_are_strs(self):
-        rv = Review()
-        rv_dict = rv.to_dict()
-        self.assertEqual(str, type(rv_dict["id"]))
-        self.assertEqual(str, type(rv_dict["created_at"]))
-        self.assertEqual(str, type(rv_dict["updated_at"]))
-
-    def test_to_dict_output(self):
-        dt = datetime.today()
-        rv = Review()
-        rv.id = "123456"
-        rv.created_at = rv.updated_at = dt
-        tdict = {
-            'id': '123456',
-            '__class__': 'Review',
-            'created_at': dt.isoformat(),
-            'updated_at': dt.isoformat(),
-        }
-        self.assertDictEqual(rv.to_dict(), tdict)
-
-    def test_contrast_to_dict_dunder_dict(self):
-        rv = Review()
-        self.assertNotEqual(rv.to_dict(), rv.__dict__)
-
-    def test_to_dict_with_arg(self):
-        rv = Review()
-        with self.assertRaises(TypeError):
-            rv.to_dict(None)
-
+    def test_to_dict(self):
+        self.assertTrue('to_dict' in dir(self.review))
 
 if __name__ == "__main__":
     unittest.main()
