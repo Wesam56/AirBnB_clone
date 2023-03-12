@@ -1,44 +1,19 @@
-<<<<<<< HEAD
 #!/usr/bin/python3
-""" Class user """
-
+"""Implements the user's model"""
 from models.base_model import BaseModel
 
 
 class User(BaseModel):
-    """ Class user """
+    """
+    Inherits from the BaseModel class and add user's functionalities
+
+    Args:
+        email (str): the email of the user
+        password (str): the password of the user
+        first_name (str): the first name of the user
+        last_name (str): the last name of the user
+    """
     email = ""
     password = ""
     first_name = ""
     last_name = ""
-=======
-#!/usr/bin/python3
-""" holds class User"""
-import models
-from models.base_model import BaseModel, Base
-from os import getenv
-import sqlalchemy
-from sqlalchemy import Column, String
-from sqlalchemy.orm import relationship
-
-
-class User(BaseModel, Base):
-    """Representation of a user """
-    if models.storage_t == 'db':
-        __tablename__ = 'users'
-        email = Column(String(128), nullable=False)
-        password = Column(String(128), nullable=False)
-        first_name = Column(String(128), nullable=True)
-        last_name = Column(String(128), nullable=True)
-        places = relationship("Place", backref="user")
-        reviews = relationship("Review", backref="user")
-    else:
-        email = ""
-        password = ""
-        first_name = ""
-        last_name = ""
-
-    def __init__(self, *args, **kwargs):
-        """initializes user"""
-        super().__init__(*args, **kwargs)
->>>>>>> 5412c539897a04f3d1183fe2e886d9f9b07e70f9
